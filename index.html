@@ -30,26 +30,6 @@
       margin: 0 auto;
     }
 
-    .header {
-      background: white;
-      border-radius: 20px;
-      padding: 25px;
-      margin-bottom: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-
-    .header h1 {
-      font-size: 28px;
-      color: #667eea;
-      margin-bottom: 8px;
-    }
-
-    .header p {
-      color: #888;
-      font-size: 16px;
-    }
-
     .search-container {
       background: white;
       border-radius: 20px;
@@ -151,7 +131,7 @@
 
     .product-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      grid-template-columns: repeat(2, 1fr);
       gap: 15px;
     }
 
@@ -187,14 +167,15 @@
     }
 
     .product-code {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 5px;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
     }
 
     .product-price {
-      font-size: 16px;
-      opacity: 0.9;
+      font-size: 20px;
+      font-weight: 600;
+      opacity: 0.95;
     }
 
     .empty-state {
@@ -462,11 +443,6 @@
         </div>
       </div>
       <button class="install-banner-close" onclick="closeInstallBanner()">×</button>
-    </div>
-
-    <div class="header">
-      <h1>🔍 제품 검색</h1>
-      <p>대리점 조회 전용</p>
     </div>
 
     <div class="search-container">
