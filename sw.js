@@ -1,7 +1,7 @@
 const CACHE_NAME = 'product-search-v1';
 const urlsToCache = [
-  '/search.html',
-  '/manifest-search.json'
+  '/index.html',
+  '/manifest.json'
 ];
 
 // 설치 이벤트
