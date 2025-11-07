@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="제품검색">
-  <link rel="manifest" href="manifest-search.json">
-  <link rel="apple-touch-icon" href="icon-search-192.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <title>제품 검색</title>
   <style>
     * {
@@ -389,10 +389,81 @@
     .no-results p {
       font-size: 18px;
     }
+
+    .install-banner {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+      animation: slideDown 0.5s ease-out;
+    }
+
+    .install-banner-icon {
+      font-size: 32px;
+      flex-shrink: 0;
+    }
+
+    .install-banner-content {
+      flex: 1;
+    }
+
+    .install-banner-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .install-banner-text {
+      font-size: 13px;
+      opacity: 0.9;
+      line-height: 1.4;
+    }
+
+    .install-banner-close {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+
+    .install-banner-close:active {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .install-banner.hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- 앱 설치 안내 배너 -->
+    <div class="install-banner" id="installBanner">
+      <div class="install-banner-icon">📱</div>
+      <div class="install-banner-content">
+        <div class="install-banner-title">앱으로 설치하세요!</div>
+        <div class="install-banner-text">
+          iPhone: 공유(⬆️) → 홈 화면에 추가<br>
+          Android: 메뉴(⋮) → 홈 화면에 추가
+        </div>
+      </div>
+      <button class="install-banner-close" onclick="closeInstallBanner()">×</button>
+    </div>
+
     <div class="header">
       <h1>🔍 제품 검색</h1>
       <p>대리점 조회 전용</p>
@@ -501,10 +572,6 @@
         document.getElementById('totalCount').textContent = allProducts.length;
         displayProducts(allProducts);
 
-        if (allProducts.length > 0) {
-          showMessage(`${allProducts.length}개 제품을 불러왔습니다`, 'success');
-        }
-
       } catch (error) {
         console.error('Error:', error);
         document.getElementById('loading').classList.remove('show');
@@ -608,15 +675,30 @@
       }, 3000);
     }
 
+    // 설치 배너 닫기
+    function closeInstallBanner() {
+      document.getElementById('installBanner').classList.add('hidden');
+      localStorage.setItem('installBannerClosed', 'true');
+    }
+
+    // 설치 배너 표시 여부 확인
+    function checkInstallBanner() {
+      const bannerClosed = localStorage.getItem('installBannerClosed');
+      if (bannerClosed === 'true') {
+        document.getElementById('installBanner').classList.add('hidden');
+      }
+    }
+
     // 페이지 로드 시 제품 불러오기
     window.addEventListener('load', () => {
+      checkInstallBanner();
       loadProducts();
     });
 
     // 서비스 워커 등록 (PWA)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw-search.js')
+        navigator.serviceWorker.register('/sw.js')
           .then(registration => console.log('SW registered'))
           .catch(err => console.log('SW registration failed'));
       });
