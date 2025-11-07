@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#667eea">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="제품검색">
+  <link rel="manifest" href="manifest-search.json">
+  <link rel="apple-touch-icon" href="icon-search-192.png">
+  <title>제품 검색</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #667eea;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #888;
+      font-size: 16px;
+    }
+
+    .search-container {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 20px 20px 20px 55px;
+      border: 3px solid #e9ecef;
+      border-radius: 15px;
+      font-size: 20px;
+      transition: all 0.3s;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 24px;
+      color: #667eea;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 2px solid #f0f0f0;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 28px;
+      font-weight: 700;
+      color: #667eea;
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 16px;
+      color: #888;
+      margin-top: 5px;
+    }
+
+    .content {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .loading.show {
+      display: block;
+    }
+
+    .loading p {
+      font-size: 18px;
+      color: #888;
+      margin-top: 15px;
+    }
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 15px;
+    }
+
+    .product-card {
+      position: relative;
+      aspect-ratio: 1;
+      background: #f8f9fa;
+      border-radius: 15px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .product-card:active {
+      transform: scale(0.95);
+    }
+
+    .product-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .product-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+      padding: 15px;
+      color: white;
+    }
+
+    .product-code {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .product-price {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #aaa;
+    }
+
+    .empty-state svg {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 20px;
+      opacity: 0.3;
+    }
+
+    .empty-state p {
+      font-size: 20px;
+      line-height: 1.6;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.95);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s;
+      padding: 20px;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 25px;
+      padding: 30px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      text-align: center;
+      animation: slideUp 0.3s;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-image-container {
+      margin-bottom: 25px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .modal-content img {
+      width: 100%;
+      display: block;
+    }
+
+    .modal-info {
+      margin: 25px 0;
+      text-align: left;
+    }
+
+    .modal-info-item {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 15px;
+    }
+
+    .modal-info-label {
+      font-size: 16px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .modal-info-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .modal-info-value.price {
+      color: #667eea;
+    }
+
+    .close-modal {
+      width: 100%;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 15px;
+      font-size: 20px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .close-modal:active {
+      transform: scale(0.98);
+    }
+
+    .message {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 18px 30px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      z-index: 3000;
+      display: none;
+      font-weight: 600;
+      font-size: 18px;
+      animation: slideDown 0.3s;
+      max-width: 90%;
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    .message.error {
+      background: #f44336;
+      color: white;
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translate(-50%, -100%);
+      }
+      to {
+        transform: translate(-50%, 0);
+      }
+    }
+
+    .refresh-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      border: none;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: all 0.3s;
+      box-shadow: 0 5px 15px rgba(245, 87, 108, 0.3);
+    }
+
+    .refresh-btn:active {
+      transform: scale(0.98);
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 40px 20px;
+      color: #888;
+    }
+
+    .no-results svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 15px;
+      opacity: 0.3;
+    }
+
+    .no-results p {
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔍 제품 검색</h1>
+      <p>대리점 조회 전용</p>
+    </div>
+
+    <div class="search-container">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          id="searchInput" 
+          placeholder="제품코드로 검색하세요..." 
+          onkeyup="filterProducts()"
+          autocomplete="off"
+        >
+      </div>
+      
+      <div class="stats">
+        <div class="stat-item">
+          <span class="stat-number" id="totalCount">0</span>
+          <span class="stat-label">전체 제품</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="displayCount">0</span>
+          <span class="stat-label">검색 결과</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <button class="refresh-btn" onclick="loadProducts()">
+        🔄 새로고침
+      </button>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>제품을 불러오는 중...</p>
+      </div>
+
+      <div id="productList" class="product-grid"></div>
+    </div>
+  </div>
+
+  <!-- 메시지 알림 -->
+  <div class="message" id="message"></div>
+
+  <!-- 상세보기 모달 -->
+  <div class="modal" id="modal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-image-container">
+        <img id="modalImage" alt="product">
+      </div>
+      
+      <div class="modal-info">
+        <div class="modal-info-item">
+          <div class="modal-info-label">제품코드</div>
+          <div class="modal-info-value" id="modalCode"></div>
+        </div>
+        
+        <div class="modal-info-item">
+          <div class="modal-info-label">소비자가격</div>
+          <div class="modal-info-value price" id="modalPrice"></div>
+        </div>
+      </div>
+      
+      <button class="close-modal" onclick="closeModal()">닫기</button>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <!-- Firebase 설정 -->
+  <script>
+    // Firebase 설정 (관리자 앱과 동일)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAh_q5JohkauyGSqQ9-namU3rcgEo7jyik",
+      authDomain: "product-manager-b3c76.firebaseapp.com",
+      projectId: "product-manager-b3c76",
+      storageBucket: "product-manager-b3c76.firebasestorage.app",
+      messagingSenderId: "304854388503",
+      appId: "1:304854388503:web:74bcccdb12bcb3cc693152"
+    };
+
+    // Firebase 초기화
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let allProducts = [];
+
+    // 제품 목록 불러오기
+    async function loadProducts() {
+      try {
+        document.getElementById('loading').classList.add('show');
+        document.getElementById('productList').innerHTML = '';
+
+        const snapshot = await db.collection('products').orderBy('timestamp', 'desc').get();
+        allProducts = [];
+
+        snapshot.forEach(doc => {
+          allProducts.push(doc.data());
+        });
+
+        document.getElementById('loading').classList.remove('show');
+        document.getElementById('totalCount').textContent = allProducts.length;
+        displayProducts(allProducts);
+
+        if (allProducts.length > 0) {
+          showMessage(`${allProducts.length}개 제품을 불러왔습니다`, 'success');
+        }
+
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('loading').classList.remove('show');
+        showMessage('제품을 불러오는데 실패했습니다', 'error');
+      }
+    }
+
+    // 제품 검색
+    function filterProducts() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+      
+      if (searchTerm === '') {
+        displayProducts(allProducts);
+        document.getElementById('displayCount').textContent = allProducts.length;
+      } else {
+        const filtered = allProducts.filter(product => 
+          product.productCode.toLowerCase().includes(searchTerm)
+        );
+        displayProducts(filtered);
+        document.getElementById('displayCount').textContent = filtered.length;
+      }
+    }
+
+    // 제품 목록 표시
+    function displayProducts(products) {
+      const container = document.getElementById('productList');
+
+      if (products.length === 0) {
+        const searchTerm = document.getElementById('searchInput').value.trim();
+        
+        if (searchTerm) {
+          // 검색 결과 없음
+          container.innerHTML = `
+            <div class="no-results">
+              <svg fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+              </svg>
+              <p>'${searchTerm}'에 대한<br>검색 결과가 없습니다</p>
+            </div>
+          `;
+        } else {
+          // 등록된 제품 없음
+          container.innerHTML = `
+            <div class="empty-state">
+              <svg fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+              </svg>
+              <p>아직 등록된 제품이 없습니다<br><br>관리자가 제품을 등록하면<br>여기에 표시됩니다</p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      container.innerHTML = '';
+      products.forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.onclick = () => showProductDetail(product);
+
+        card.innerHTML = `
+          <img src="${product.imageUrl}" alt="${product.productCode}" loading="lazy">
+          <div class="product-info">
+            <div class="product-code">${product.productCode}</div>
+            <div class="product-price">${Number(product.price).toLocaleString()}원</div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    // 제품 상세 보기
+    function showProductDetail(product) {
+      const modal = document.getElementById('modal');
+
+      document.getElementById('modalImage').src = product.imageUrl;
+      document.getElementById('modalCode').textContent = product.productCode;
+      document.getElementById('modalPrice').textContent = Number(product.price).toLocaleString() + '원';
+
+      modal.classList.add('show');
+    }
+
+    // 모달 닫기
+    function closeModal() {
+      document.getElementById('modal').classList.remove('show');
+    }
+
+    // 메시지 표시
+    function showMessage(text, type) {
+      const message = document.getElementById('message');
+      message.textContent = text;
+      message.className = 'message show';
+      
+      if (type === 'error') {
+        message.classList.add('error');
+      }
+
+      setTimeout(() => {
+        message.classList.remove('show');
+      }, 3000);
+    }
+
+    // 페이지 로드 시 제품 불러오기
+    window.addEventListener('load', () => {
+      loadProducts();
+    });
+
+    // 서비스 워커 등록 (PWA)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw-search.js')
+          .then(registration => console.log('SW registered'))
+          .catch(err => console.log('SW registration failed'));
+      });
+    }
+  </script>
+</body>
+</html>
